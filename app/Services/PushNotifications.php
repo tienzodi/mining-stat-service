@@ -8,20 +8,15 @@ class PushNotifications {
 
 	public static function sendNotificationToMobile($notification)
     {
-    	$user = User::findOrFail($notification['user_id']);
+		$type = $notification['type'];
+		$content = $notification['content'];
+		$token = $notification['token'];
 
-    	if($user)
-    	{
-    		if(strlen($user->ios_token) != 0)
-    		{
-    			PushNotifications::sendMessageToIOS($notification['content'], $user->ios_token);
-    		}
-
-    		if(strlen($user->android_token) != 0)
-    		{
-    			PushNotifications::sendMessageToAndroid($notification['content'], $user->android_token);
-    		}
-	    }
+    	if($type == 'ios') {
+    		PushNotifications::sendMessageToIOS($content, $token);
+		} else {
+			PushNotifications::sendMessageToAndroid($content, $token);
+		}
     }
 
     private static function sendMessageToAndroid($message, $registration_ids)
@@ -59,10 +54,16 @@ class PushNotifications {
 		Log::info($message);
 		
 		// Put your private key's passphrase here:
-		$passphrase = '123456';
-
-		$ctx = stream_context_create();
-		stream_context_set_option($ctx, 'ssl', 'local_cert', app_path().'/Services/ck.pem');
+		$passphrase = '';
+		$arrContextOptions=array(
+			"ssl"=>array(
+				"verify_peer"=>false,
+				"verify_peer_name"=>false,
+			),
+		);  
+		
+		$ctx = stream_context_create($arrContextOptions);
+		stream_context_set_option($ctx, 'ssl', 'local_cert', app_path().'/Services/development_-NM2W52AY4.zodinet.pem');
 		stream_context_set_option($ctx, 'ssl', 'passphrase', $passphrase);
 
 		// Open a connection to the APNS server
